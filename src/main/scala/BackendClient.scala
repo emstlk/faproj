@@ -1,8 +1,9 @@
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.thrift.ThriftClientFramedCodec
-import java.net.InetSocketAddress
+import java.net.{InetAddress, InetSocketAddress}
 import org.apache.thrift.protocol.TBinaryProtocol
-import os.faproj.api.{BackendService$FinagleClient, BackendService}
+import os.faproj.api.BackendService$FinagleClient
+import com.twitter.conversions.time._
 
 /**
  * $Id$
@@ -13,17 +14,21 @@ import os.faproj.api.{BackendService$FinagleClient, BackendService}
  */
 object BackendClient {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
+
     val service = ClientBuilder()
-      .hosts(new InetSocketAddress(8888))
+      .hosts(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 8888))
       .codec(ThriftClientFramedCodec())
       .hostConnectionLimit(1)
+      .tcpConnectTimeout(1.seconds)
       .build()
 
     val client = new BackendService$FinagleClient(service, new TBinaryProtocol.Factory())
 
     client.incrementCounter() onSuccess {
       response => println("Counter: " + response)
+    } onFailure {
+      e => e.printStackTrace()
     } ensure {
       service.close()
     }

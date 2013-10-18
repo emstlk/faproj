@@ -19,7 +19,7 @@ object Backend {
   val log = Logger()
 
   val counter = new AtomicLong()
-  var message = ""
+  var message = "Hi jack!"
 
   def main(args: Array[String]) {
     val processor = new BackendService[Future] {
