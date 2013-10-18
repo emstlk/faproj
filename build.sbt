@@ -6,6 +6,8 @@ scalaVersion:="2.10.2"
 
 resolvers += "Twitter Maven repo" at "http://maven.twttr.com/"
 
+com.github.retronym.SbtOneJar.oneJarSettings
+
 com.twitter.scrooge.ScroogeSBT.newSettings
 
 libraryDependencies ++= Seq(
