@@ -1,13 +1,11 @@
 import com.twitter.finagle.builder.ServerBuilder
-import com.twitter.finagle.http.Http
-import com.twitter.finagle.Service
+import com.twitter.finagle.thrift.ThriftServerFramedCodec
 import com.twitter.logging.Logger
 import com.twitter.util.Future
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicLong
-import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.handler.codec.http._
-import org.jboss.netty.util.CharsetUtil
+import org.apache.thrift.protocol.TBinaryProtocol
+import os.faproj.api.{BackendService$FinagleService, BackendService}
 
 /**
  * $Id$
@@ -16,26 +14,33 @@ import org.jboss.netty.util.CharsetUtil
  * Date: 29.09.13
  * Time: 23:44
  */
-object Backend extends App {
+object Backend {
 
   val log = Logger()
 
   val counter = new AtomicLong()
+  var message = ""
 
-  def nextId() = "" + counter.incrementAndGet()
+  def main(args: Array[String]) {
+    val processor = new BackendService[Future] {
+      def getCounter(): Future[Long] = Future(counter.get())
 
-  val service = new Service[HttpRequest, HttpResponse] {
-    def apply(request: HttpRequest) = Future {
-      val result = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
-      result.setContent(ChannelBuffers.copiedBuffer(nextId(), CharsetUtil.UTF_8))
-      result
+      def getString(): Future[String] = Future.value(message)
+
+      def incrementCounter(): Future[Long] = Future(counter.incrementAndGet())
+
+      def saveString(msg: String): Future[Unit] = Future {
+        message = msg
+      }
     }
-  }
 
-  val server = ServerBuilder()
-    .codec(Http())
-    .bindTo(new InetSocketAddress(8888))
-    .name("TestServer")
-    .build(service)
+    val service = new BackendService$FinagleService(processor, new TBinaryProtocol.Factory())
+
+    ServerBuilder()
+      .name("FaServer")
+      .bindTo(new InetSocketAddress(8888))
+      .codec(ThriftServerFramedCodec())
+      .build(service)
+  }
 
 }
