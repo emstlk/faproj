@@ -18,19 +18,18 @@ object Backend {
 
   val log = Logger()
 
-  val counter = new AtomicLong()
-  var message = "Hi jack!"
-
   def main(args: Array[String]) {
+    val userService = new UserService()
+
     val processor = new BackendService[Future] {
-      def getCounter(): Future[Long] = Future(counter.get())
+      def auth(uid: String) = {
+        userService.auth(uid)
+        Future.value()
+      }
 
-      def getString(): Future[String] = Future.value(message)
-
-      def incrementCounter(): Future[Long] = Future(counter.incrementAndGet())
-
-      def saveString(msg: String): Future[Unit] = Future {
-        message = msg
+      def login(uid: String): Future[Boolean] = {
+        if (Option(uid).isEmpty) Future.value(false)
+        else Future.value(userService.login(uid))
       }
     }
 

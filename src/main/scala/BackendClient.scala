@@ -25,13 +25,13 @@ object BackendClient {
 
     val client = new BackendService$FinagleClient(service, new TBinaryProtocol.Factory())
 
-    client.incrementCounter() onSuccess {
+    /*client.incrementCounter() onSuccess {
       response => println("Counter: " + response)
     } onFailure {
       e => e.printStackTrace()
     } ensure {
       service.close()
-    }
+    }*/
   }
 
 }

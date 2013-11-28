@@ -2,8 +2,7 @@
 namespace java os.faproj.api
 
 service BackendService {
-    i64 getCounter()
-    i64 incrementCounter()
-    void saveString(1: string msg)
-    string getString()
+    void auth(1: string uid)
+    bool login(1: string uid)
+    // bool logout(1: string uid)
 }
