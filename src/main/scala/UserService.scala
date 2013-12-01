@@ -31,9 +31,9 @@ class UserService {
   )
 
   val dao = new Dao("public")
-  transaction {
+  /*transaction {
     dao.create
-  }
+  }*/
 
   def login(fbUserId: String) = {
     try {
