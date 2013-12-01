@@ -17,7 +17,7 @@ object BackendClient {
   def main(args: Array[String]): Unit = {
 
     val service = ClientBuilder()
-      .hosts(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 8888))
+      .hosts(new InetSocketAddress(8888))
       .codec(ThriftClientFramedCodec())
       .hostConnectionLimit(1)
       .tcpConnectTimeout(1.seconds)
@@ -25,13 +25,13 @@ object BackendClient {
 
     val client = new BackendService$FinagleClient(service, new TBinaryProtocol.Factory())
 
-    /*client.incrementCounter() onSuccess {
-      response => println("Counter: " + response)
+    client.login("xxxxxxxxx") onSuccess {
+      response => println("Login: " + response)
     } onFailure {
       e => e.printStackTrace()
     } ensure {
       service.close()
-    }*/
+    }
   }
 
 }

@@ -1,7 +1,8 @@
+import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.twitter.logging.Logger
-import com.twitter.querulous.database.ApachePoolingDatabaseFactory
-import com.twitter.querulous.evaluator.StandardQueryEvaluatorFactory
-import com.twitter.querulous.query.SqlQueryFactory
+import org.squeryl.adapters.PostgreSqlAdapter
+import org.squeryl.SessionFactory
+import org.squeryl.PrimitiveTypeMode._
 
 /**
  * $Id$
@@ -12,23 +13,38 @@ import com.twitter.querulous.query.SqlQueryFactory
  */
 class UserService {
 
-  import com.twitter.conversions.time._
-
   val log = Logger()
 
   Class.forName("org.postgresql.Driver")
-  val apachePoolingDatabaseFactory =
-    new ApachePoolingDatabaseFactory(2, 2, None, 1.seconds, 10.millis, false, 5.minutes, Map.empty)
-  val queryEvaluatorFactory =
-    new StandardQueryEvaluatorFactory(apachePoolingDatabaseFactory, new SqlQueryFactory)
-  val queryEvaluator = queryEvaluatorFactory("localhost:5432", "xxx", "yyy", "zzz", Map.empty[String, String], "jdbc:postgresql")
-  val schema = "public"
+
+  val dataSource = new ComboPooledDataSource()
+  dataSource.setDriverClass("org.postgresql.Driver")
+  dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/faproj")
+  dataSource.setUser("faproject")
+  dataSource.setPassword("xxxxxxxxx")
+  dataSource.setInitialPoolSize(1)
+  dataSource.setMinPoolSize(1)
+  dataSource.setMaxPoolSize(5)
+
+  SessionFactory.concreteFactory = Some(() => org.squeryl.Session.create(
+    dataSource.getConnection(), new PostgreSqlAdapter)
+  )
+
+  val dao = new Dao("public")
+  transaction {
+    dao.create
+  }
 
   def login(fbUserId: String) = {
     try {
-      queryEvaluator.select(s"select count(*) from $schema.users where fb_id = ?", fbUserId) {
-        rs => if (rs.getInt(1) == 0) {
-          queryEvaluator.execute(s"insert into $schema.users(fb_id) values(?)", fbUserId)
+      inTransaction {
+        val cntUsers: Long = from(dao.users)(r =>
+          where(r.fbId === fbUserId) compute count
+        ).single.measures
+
+        if (cntUsers == 0) {
+          val u = dao.users.insert(new User(fbId = fbUserId))
+          log.info("Created user " + u.fbId)
         }
       }
       true
@@ -39,8 +55,15 @@ class UserService {
     }
   }
 
-  def auth(fbUserId: String) {
+  def auth(fbUserId: String): Boolean = {
     log.info("Auth user " + fbUserId)
+    inTransaction {
+      val cntUsers: Long = from(dao.users)(r =>
+        where(r.fbId === fbUserId) compute count
+      ).single.measures
+
+      cntUsers != 0
+    }
   }
 
 }

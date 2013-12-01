@@ -3,7 +3,6 @@ import com.twitter.finagle.thrift.ThriftServerFramedCodec
 import com.twitter.logging.Logger
 import com.twitter.util.Future
 import java.net.InetSocketAddress
-import java.util.concurrent.atomic.AtomicLong
 import org.apache.thrift.protocol.TBinaryProtocol
 import os.faproj.api.{BackendService$FinagleService, BackendService}
 
@@ -22,14 +21,11 @@ object Backend {
     val userService = new UserService()
 
     val processor = new BackendService[Future] {
-      def auth(uid: String) = {
-        userService.auth(uid)
-        Future.value()
-      }
+      def auth(uid: String) = Future(userService.auth(uid))
 
-      def login(uid: String): Future[Boolean] = {
-        if (Option(uid).isEmpty) Future.value(false)
-        else Future.value(userService.login(uid))
+      def login(uid: String) = {
+        if (Option(uid).isEmpty || uid.isEmpty) Future.value(false)
+        else Future(userService.login(uid))
       }
     }
 
