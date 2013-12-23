@@ -43,7 +43,7 @@ class UserService {
         ).single.measures
 
         if (cntUsers == 0) {
-          val u = dao.users.insert(new User(fbId = fbUserId))
+          val u = dao.users.insert(User(fbId = fbUserId))
           log.info("Created user " + u.fbId)
         }
       }
@@ -65,5 +65,18 @@ class UserService {
       cntUsers != 0
     }
   }
+
+  def getLastConfig(version: Byte): Option[String] = {
+    val config = inTransaction {
+      dao.configs.where(
+        _.id in from(dao.configs)(rs => compute(max(rs.id)))
+      ).single
+    }
+
+    if (version == config.id) None
+    else Option(config.json)
+  }
+
+
 
 }

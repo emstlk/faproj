@@ -27,6 +27,8 @@ object Backend {
         if (Option(uid).isEmpty || uid.isEmpty) Future.value(false)
         else Future(userService.login(uid))
       }
+
+      def getLastConfig(version: Byte) = Future(userService.getLastConfig(version).getOrElse(""))
     }
 
     val service = new BackendService$FinagleService(processor, new TBinaryProtocol.Factory())
