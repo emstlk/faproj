@@ -30,20 +30,27 @@ class UserService {
     dataSource.getConnection(), new PostgreSqlAdapter)
   )
 
-  val dao = new Dao("public")
-  /*transaction {
-    dao.create
-  }*/
+  def getUid(fbUserId: String) = {
+    try {
+      inTransaction {
+        Dao.users.where(_.fbId === fbUserId).single
+      }
+    } catch {
+      case e: Exception =>
+        log.error(e, "User " + fbUserId + " not found")
+        throw e
+    }
+  }
 
   def login(fbUserId: String) = {
     try {
       inTransaction {
-        val cntUsers: Long = from(dao.users)(r =>
+        val cntUsers: Long = from(Dao.users)(r =>
           where(r.fbId === fbUserId) compute count
         ).single.measures
 
         if (cntUsers == 0) {
-          val u = dao.users.insert(User(fbId = fbUserId))
+          val u = Dao.users.insert(User(fbId = fbUserId))
           log.info("Created user " + u.fbId)
         }
       }
@@ -58,7 +65,7 @@ class UserService {
   def auth(fbUserId: String): Boolean = {
     log.info("Auth user " + fbUserId)
     inTransaction {
-      val cntUsers: Long = from(dao.users)(r =>
+      val cntUsers: Long = from(Dao.users)(r =>
         where(r.fbId === fbUserId) compute count
       ).single.measures
 
@@ -68,15 +75,14 @@ class UserService {
 
   def getLastConfig(version: Byte): Option[String] = {
     val config = inTransaction {
-      dao.configs.where(
-        _.id in from(dao.configs)(rs => compute(max(rs.id)))
+      Dao.configs.where(
+        _.id in from(Dao.configs)(rs => compute(max(rs.id)))
       ).single
     }
 
     if (version == config.id) None
     else Option(config.json)
   }
-
 
 
 }
