@@ -33,4 +33,6 @@ service BackendService {
 
     void endBattle(1: Battle battle)
     i32 getLifePoints(1: string uid, 2: i32 creatureId)
+
+    i32 getCountBattlesForLastDay(1: string uid)
 }

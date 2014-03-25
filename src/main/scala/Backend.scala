@@ -49,6 +49,10 @@ object Backend {
       def getLifePoints(uid: String, creatureId: Int) = Future {
         commonService.getLifePoints(creatureId, userService.getUid(uid).id)
       }
+
+      def getCountBattlesForLastDay(uid: String) = Future {
+        commonService.getCountBattlesForLastDay(userService.getUid(uid)).toInt
+      }
     }
 
     val service = new BackendService$FinagleService(processor, new TBinaryProtocol.Factory())

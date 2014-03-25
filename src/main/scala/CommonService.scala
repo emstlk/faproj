@@ -1,5 +1,6 @@
 import com.twitter.logging.Logger
 import java.sql.Timestamp
+import java.util.Calendar
 import org.squeryl.PrimitiveTypeMode._
 import os.faproj.api.BattleResult
 import os.faproj.api
@@ -67,6 +68,22 @@ class CommonService {
         case None =>
           MAX_LIFE_POINTS
       }
+    }
+  }
+
+  def getCountBattlesForLastDay(user: User) = {
+    inTransaction {
+      val cal = Calendar.getInstance()
+      cal.setTimeInMillis(now.getTime)
+      cal.set(Calendar.MILLISECOND, 0)
+      cal.set(Calendar.SECOND, 0)
+      cal.set(Calendar.MINUTE, 0)
+      cal.set(Calendar.HOUR_OF_DAY, 0)
+      val startDay = new Timestamp(cal.getTimeInMillis)
+
+      from(Dao.userToBattlesAttacker.rightTable)(
+        b => where(b.created > startDay) compute count
+      ).single.measures
     }
   }
 
