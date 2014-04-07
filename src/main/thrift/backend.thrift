@@ -22,6 +22,7 @@ struct Battle {
     1: Creature attacker
     2: Creature defender
     3: BattleResult result
+    4: optional i32 battleId
 }
 
 service BackendService {
@@ -31,8 +32,9 @@ service BackendService {
 
     string getLastConfig(1: byte version)
 
+    i32 beginBattle(1: Battle battle)
     void endBattle(1: Battle battle)
-    i32 getLifePoints(1: string uid, 2: i32 creatureId)
 
+    i32 getLifePoints(1: string uid, 2: i32 creatureId)
     i32 getCountBattlesForLastDay(1: string uid)
 }

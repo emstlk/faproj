@@ -51,10 +51,21 @@ class CommonService {
     }
   }
 
-
-  def endBattle(attacker: Creature, defender: Creature, state: BattleResult) {
+  def beginBattle(attacker: Creature, defender: Creature) = {
     inTransaction {
-      Dao.battles.insert(Battle(attacker = attacker.uid, defender = defender.uid, result = state.value))
+      Dao.battles.insert(
+        Battle(attacker = attacker.uid, defender = defender.uid, result = BattleResult.Unknown.value)
+      ).id
+    }
+  }
+
+  def endBattle(battleId: Int, attacker: Creature, defender: Creature, result: BattleResult) {
+    inTransaction {
+      update(Dao.battles)(b =>
+        where(b.id === battleId)
+          set(b.result := result.value,
+          b.updated := now)
+      )
     }
   }
 

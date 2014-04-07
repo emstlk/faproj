@@ -32,7 +32,8 @@ case class Battle(id: Int = 0,
                   attacker: Int,
                   defender: Int,
                   result: Int, // BattleResult
-                  created: Timestamp = new Timestamp(currentTime)) extends KeyedEntity[Int]
+                  created: Timestamp = new Timestamp(currentTime),
+                  updated: Timestamp = new Timestamp(currentTime)) extends KeyedEntity[Int]
 
 object Dao extends Schema {
 

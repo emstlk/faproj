@@ -32,7 +32,7 @@ object Backend {
 
       def getLastConfig(version: Byte) = Future(userService.getLastConfig(version).getOrElse(""))
 
-      def endBattle(b: api.Battle) = Future {
+      def beginBattle(b: api.Battle) = Future {
         val attacker = commonService.saveCreature(
           userService.getUid(b.attacker.uid).id,
           b.attacker
@@ -43,7 +43,25 @@ object Backend {
           b.defender
         )
 
-        commonService.endBattle(attacker, defender, b.result)
+        commonService.beginBattle(attacker, defender)
+      }
+
+      def endBattle(b: api.Battle) = Future {
+        require(b.battleId.isDefined, "battleId is empty")
+
+        val attacker = commonService.saveCreature(
+          userService.getUid(b.attacker.uid).id,
+          b.attacker
+        )
+
+        val defender = commonService.saveCreature(
+          userService.getUid(b.defender.uid).id,
+          b.defender
+        )
+
+        b.battleId.map {
+          commonService.endBattle(_, attacker, defender, b.result)
+        }
       }
 
       def getLifePoints(uid: String, creatureId: Int) = Future {
